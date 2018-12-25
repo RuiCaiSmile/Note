@@ -227,50 +227,6 @@ var json2 =JSON.stringify(object);
 
 https://blog.csdn.net/stone10086/article/details/74171094
 
-## 杂项 等待处理
-
-list
-
-1[连等问题](https://segmentfault.com/q/1010000002637728)
-
-```
-var a = {n:1};
-var b = a; // 持有a，以回查
-a.x = a = {n:2};
-alert(a.x);// --> undefined
-alert(b.x);// --> {n:2}
-```
-
-substring  
-substr
-
-//css3 中，使用 calc 计算时，必须在符合左右两边留空格,IE8 不兼容
-
-2 width:calc(100% - 100px);
-
-3 overflow:hidden 和 float 关系
-二阶段试卷
-
-用 requirejs 重构商城项目，并概况各个组件
-
-java 中如何解析 XML，JSON
-JS 中如何解析 XML，JSON
-
-项目基于 springmvc 框架开发，使用 springmvc 框架返回数据时，通过设置 rm 注解可以将 java 对象序列化为 json 字符串返回到前端，通过 JQuery 遍历后端返回的 json 数据，生成页面元素
-
-监听文本框
-oninput
-onkeyup
-onafterpaste
-oninput
-
-
-```
-function check(str) {
-    str = str.replace(/\W/g,'').toLowerCase();
-    return str === str.split('').reverse().join()
-}
-```
 
 ## 判断浏览器版本
 
