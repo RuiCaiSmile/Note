@@ -71,7 +71,7 @@ class Welcome extends React.Component {
 }
 ```
 
-所有 React 组件都必须是纯函数，并禁止修改其自身 props，为了实现实时更新,就需要使用到 state 属性。
+所有 React 组件都必须是纯函数（输出结果只依赖于参数，并且没有副作用），并禁止修改其自身 props，为了实现实时更新,就需要使用到 state 属性。
 `this.state`在构造函数里初始化,修改值则通过`this.setState()`方法，以下是封装路径导航组件时的一段代码：
 
 ```
@@ -96,7 +96,6 @@ setAddressDataSource(dataSource){
    }
 ```
 
-**以下内容尚未实践并验证**
 所有嵌套在组件中的 JSX 结构都可以在组件内部通过 props.children 获取到;
 这里需要注意，this.props.children 的值有三种可能：如果当前组件没有子节点，它就是 undefined;如果有一个子节点，数据类型是 Object;如果有多个子节点，数据类型就是 array。所以，处理 this.props.children 的时候要小心。
 React 提供一个工具方法 React.Children 来处理 this.props.children。我们可以用 React.Children.map 来遍历子节点，而不用担心 this.props.children 的数据类型是 undefined 还是 object。
@@ -117,6 +116,113 @@ class Layout extends Component {
   }
 }
 ```
+### 常用的组件设计模式
+组件可以说是react中的基本单元，常用的组件类别有：
+有状态组件（容器组件、聪明组件）、无状态组件（傻瓜组件、展示组件），高阶组件，Render Props等
+有状态组件与容器组件这样的几种组件定义不完全相同。实际使用中互相交叉，但基本可以理解为同一种组件模式，即分离数据与操作。
+#### 有状态组件
+包含state且随着事件或者外部的消息而发生改变，通常会使用生命周期，在写业务逻辑时经常使用。
+#### 无状态组件
+不包含state，所以就是纯静态的展示作用，基本结构就是props加上render，复用性很强。
+```
+const PureComponent = (props) => (
+    <div>
+        //use props
+    </div>
+)
+```
+#### 高阶组件(HOC)
+“高阶组件”名为“组件”，其实并不是一个组件，而是一个函数，它接受至少一个 React 组件为参数，并且能够返回一个全新的 React 组件作为结果。
+高阶组件可以对原组件进行功能增强，添加新的行为，一般来说是提取公共逻辑，例如在不同页面都要判定是否登陆时，登陆验证就可以写成一个高阶组件。
+```
+const withLoginAndLogout = (ComponentForLogin, ComponentForLogout) => {
+  const NewComponent = (props) => {
+    if (getUserId()) {
+      return <ComponentForLogin {...props} />;
+    } else {
+      return <ComponentForLogout{...props} />;
+    }
+  }
+  return NewComponent;
+};
+```
+在使用高阶组件时，需要处理dispalyName，这是为了方便debug，模式十分固定，但确实麻烦。
+```
+const withExample = (Component) => {
+  const NewComponent = (props) => {
+    return <Component {...props} />;
+  }
+  NewComponent.displayName = `withExample(${Component.displayName || Component.name || 'Component'})`;
+  return NewCompoennt;
+};
+
+```
+
+使用时也要避免重复产生react组件。
+```
+<!-- 每次都会生成一个新的 EnhancedFoo-->
+const Example = () => {
+  const EnhancedFoo = withExample(Foo);
+  return <EnhancedFoo />
+}
+
+<!-- 只会生成一个 EnhancedFoo -->
+const EnhancedFoo = withExample(Foo);
+const Example = () => {
+  return <EnhancedFoo />
+}
+```
+
+#### Render Props
+render props即渲染属性，用于使用一个值为函数的 prop 在 React 组件之间的代码共享。
+撰写复用组件时，可以先考虑render props，再考虑高阶组件。
+```
+const Bar = ({ title }) => (<p>{title}</p>);
+
+class Foo extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { title: '我是一个state的属性' };
+    }
+    render() {
+        const { render,children } = this.props;
+        const { title } = this.state;
+
+        return (
+            <div>
+                {render(title)}
+                {children? children():''}
+            </div>
+        )
+    }
+}
+
+class App extends React.Component {
+    renderFoo(title) {
+        return <Bar title={title} />;
+    }
+    render() {
+        return (
+            <div>
+                <h2>这是一个示例组件</h2>
+                <!-- 使用render传递，但这种写法每次都会重新渲染一个bar组件，影响性能，要避免-->
+                <Foo render={(title) => <Bar title={title} />} >
+                <!-- 使用children传递 -->
+                    {() => (
+                        <h1>hello world</h1>
+                    )}
+                </Foo>
+                <!-- 这种写法不会影响性能 -->
+                <Foo   render={this.renderFoo}></Foo>
+
+            </div>
+        );
+    }
+}
+
+```
+
+
 
 ### 生命周期
 
@@ -130,7 +236,7 @@ React Components 生命周期分为三个大阶段
   - 已经 Mounted 的组件对应的 DOM 节点被从 DOM 结构中移除的过程
 
 每个不同阶段都有对应的 hock（钩子）函数
-![hock](https://raw.githubusercontent.com/RuiCaiSmile/notes/master/JS/images/ReactComponentLifecycle.jpg)
+![hock](./images/ReactComponentLifecycle.jpg)
 
 ### 处理事件 与 获取 DOM 元素
 
@@ -186,10 +292,6 @@ function NumberList(props) {
 }
 ```
 
-### 高阶组件
-
-高阶组件就是一个函数，传给它一个组件，它返回一个新的组件。新的组件使用传入的组件作为子组件。
-高阶组件的作用是用于代码复用，可以把组件之间可复用的代码、逻辑抽离到高阶组件当中。新的组件和传入的组件通过 props 传递信息。
 
 ### context
 **以下内容尚未实践并验证**
